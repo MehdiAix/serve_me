@@ -49,7 +49,8 @@ test: ## Run PHP tests (parameters : dir=tests/Feature/LoginTest.php || filter=g
 	@$(php_test) bin/phpunit $(dir) --filter $(filter) --testdox
 	@docker-compose -f docker-compose-test.yaml down
 
-start-dev: ## Run development servers
+start-dev: ## Run development servers and stopped mysql local
+	sudo service mysql stop
 	@docker-compose up -d
 	@echo "Dev server launched on http://127.0.0.1:$(DOCKER_APP_PORT)"
 	@echo "Mail server launched on http://127.0.0.1:1025"
@@ -59,6 +60,7 @@ stop-dev: ## Stop development servers
 	@docker-compose down
 	@echo "Dev server stopped: http://localhost:$(DOCKER_APP_PORT)"
 	@echo "Mail server stopped: http://localhost:1025"
+	sudo service mysql start
 
 stop-build:
 	@docker-compose down
@@ -82,7 +84,12 @@ ifdef CLEAN_MIGRATIONS
 endif
 
 bash: ## Run bash in PHP container
-	@$(bash)
+	@docker exec -it docker bash
 
 lint-php: ## Lint PHP
 	@$(php) -d memory_limit=-1 vendor/bin/phpstan analyze
+
+#create-bdd:
+#	bin/console doctrine:d:c
+# 	bin/console doctrine:migrations:migrate
+#1,mehdibougattaya.prive@gmail.com,[],$2y$13$kH8PNfnF27iQ3HCjVqpvtuFko.sy8ntuwtfrXjEmAhCPGxQqJYgTy,,,,,,2022-01-12 11:03:42,

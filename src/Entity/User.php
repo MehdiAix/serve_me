@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -13,6 +15,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
+#[ORM\HasLifecycleCallbacks()]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -35,25 +38,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private bool $isVerified = false;
 
     #[ORM\Column(type: 'string', length: 180, nullable: true)]
-    private $name;
+    private ?string $name;
 
     #[ORM\Column(type: 'string', length: 180, nullable: true)]
-    private $firstname;
+    private ?string $firstname;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    private $tokenResetPassword;
+    private ?string $tokenResetPassword;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    private $tokenResetPasswordExpire;
+    private ?string $tokenResetPasswordExpire;
 
     #[ORM\Column(type: 'datetime')]
-    private $createdAt;
+    private ?DateTime $createdAt;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
-    private $updatedAt;
+    private ?DateTime $updatedAt;
 
     #[ORM\ManyToOne(targetEntity: UserAdress::class)]
-    private $address;
+    private ?UserAdress $address;
 
     public function getId(): ?int
     {
@@ -75,12 +78,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * A visual identifier that represents this user.
-     *
      * @see UserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        return (string)$this->email;
     }
 
     /**
@@ -101,6 +103,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+
+    /**
+     * @return string
+     */
+    public function getUsername(): string
+    {
+       return $this->getEmail();
+    }
+
 
     /**
      * @see PasswordAuthenticatedUserInterface
@@ -186,24 +198,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): ?DateTimeInterface
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): self
+    public function setCreatedAt(DateTime $createdAt): self
     {
         $this->createdAt = $createdAt;
 
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeInterface
+    public function getUpdatedAt(): ?DateTime
     {
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(?\DateTimeInterface $updatedAt): self
+    public function setUpdatedAt(?DateTime $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
 
@@ -218,6 +230,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setAddress(?UserAdress $address): self
     {
         $this->address = $address;
+
+        return $this;
+    }
+
+    #[ORM\PrePersist()]
+    public function onPreCreatedAt(): User
+    {
+        $this->createdAt = new DateTime();
 
         return $this;
     }
